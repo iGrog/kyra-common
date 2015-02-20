@@ -34,6 +34,22 @@
             $csrfValue = Yii::$app->request->csrfToken;
             $addParams = \yii\helpers\Json::encode($this->addParams);
             $addButtons = \yii\helpers\Json::encode($this->addButtons);
+            $success = <<<SUCCESS
+
+success: function(json)
+                                    {
+                                        $.post('{$this->afterUploadUrl}',
+                                        { ObjectID: {$this->objectID},
+                                          IID: json.data.{$this->imageIDField},
+                                          $csrfToken : '$csrfValue'
+                                         }, function(ret)
+                                        {
+                                        }, 'json');
+                                    },
+
+SUCCESS;
+            if(empty($this->afterUploadUrl)) $success = '';
+
             $js = <<<JS
 
             $('#{$this->button}').multiSortUpload({
@@ -45,16 +61,7 @@
                                     setMainUrl: '{$this->setMainUrl}',
                                     jsonField: '{$this->jsonField}',
                                     imageIDField: '{$this->imageIDField}',
-                                    success : function(json)
-                                    {
-                                        $.post('{$this->afterUploadUrl}',
-                                        { ObjectID: {$this->objectID},
-                                          IID: json.data.{$this->imageIDField},
-                                          $csrfToken : '$csrfValue'
-                                         }, function(ret)
-                                        {
-                                        }, 'json');
-                                    },
+                                    $success
                                     csrfParam : '$csrfToken',
                                     csrfValue: '$csrfValue',
                                     addFields: $addParams

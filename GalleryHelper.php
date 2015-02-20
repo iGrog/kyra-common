@@ -50,9 +50,15 @@
         public function AddImage($oid, $iid, $ar, $objectParam='OID', $lineParam='IID')
         {
             $ar = Yii::createObject($ar);
+
+            $max = 'SELECT MAX(SortOrder) AS m FROM '.$ar->tableName().' WHERE '.$objectParam.'=:oid';
+            $max = $ar->getDb()->createCommand($max, [':oid' => $oid])->queryScalar();
+            if(empty($max)) $max = 1;
+            else $max = $max + 1;
+
             $ar->$objectParam = $oid;
             $ar->$lineParam = $iid;
-            $ar->SortOrder = 999999;
+            $ar->SortOrder = $max;
 
             $ret = $ar->save(false);
             return $ret;

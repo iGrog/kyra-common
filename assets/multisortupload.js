@@ -1,5 +1,16 @@
 (function ($)
 {
+    var Queue = function ()
+    {
+        var previous = new $.Deferred().resolve();
+
+        return function (fn, fail)
+        {
+            return previous = previous.then(fn, fail || fn);
+        };
+    };
+
+
     $.fn.multiSortUpload = function (options)
     {
         options = $.extend({}, $.fn.multiSortUpload.config, options);
@@ -163,11 +174,74 @@
             $list.sortable('destroy');
             $list.sortable({handle: '.handle'}).bind('sortupdate', doSort);
 
+            var uploadFile = function(file, progress, li, img)
+            {
+                var fd = new FormData();
+                fd.append(options.csrfParam, options.csrfValue);
+                fd.append(options.fieldName, file);
+                var addFields = options.addFields || {};
+                appendData(fd, addFields);
+                return $.when(
+                        $.ajax({
+                            type: 'POST',
+                            data: fd,
+                            url: options.url,
+                            contentType: false,
+                            processData: false,
+                            dataType: 'json',
+                            xhr: function ()
+                            {
+                                var xhr = $.ajaxSettings.xhr();
+                                if (xhr.upload)
+                                    xhr.upload.addEventListener('progress', function (prgss)
+                                    {
+                                        if (prgss.lengthComputable)
+                                        {
+                                            var percentComplete = prgss.loaded / prgss.total * 100;
+                                            progress.css({width: percentComplete + '%'});
+                                        }
+                                    }, false);
+
+                                xhr.upload.addEventListener('load', function (end)
+                                {
+                                    progress.css({width: '100%'}).fadeOut(1000);
+                                });
+                                return xhr;
+                            }
+                        })
+
+                    ).done(function (json)
+                    {
+                        if (json.hasError)
+                        {
+                            li.html(json.error).css({color: 'white', background: 'red'}).delay(3000).fadeOut(500, function()
+                            {
+                                li.remove();
+                            });
+                            return;
+                        }
+                        var url = json.data.Images[options.jsonField];
+                        img.attr('src', url);
+
+                        li.attr('data-imageid', json.data[options.imageIDField]);
+                        if ($.isFunction(options.success)) options.success(json);
+
+                        //$list.unbind('sortupdate', doSort);
+                        //$list.sortable('destroy');
+                        //$list.sortable({handle: '.handle'}).bind('sortupdate', doSort);
+
+                    }).fail(onError);
+            };
+
             $file.on('change', function ()
             {
                 var ajax = [];
 
-                $.each($file[0].files, function (idx, file)
+                var allFiles = $file[0].files;
+                var queue = Queue();
+
+                // UI
+                $.each(allFiles, function(idx, file)
                 {
                     if(!file.type.match('image'))
                     {
@@ -179,13 +253,14 @@
                     var btnID = 'btn_del_' + time;
                     var btnIDmain = 'btn_main_' + time;
 
-                    var item = '<li id="' + id + '" class="thumbnail">'
+                    var item = $('<li id="' + id + '" class="thumbnail">'
                         + '<div class="handle"></div>'
                         + '<img id="' + imgID + '" />'
                         + '<div class="progress"></div>'
                         + '<button id="' + btnID + '" class="delete">x</button>'
                         + '<button id="' + btnIDmain + '" class="main">*</button>'
-                        + '</li>';
+                        + '</li>');
+                    item.data('FILEDATA', file);
                     $list.append(item);
                     var $img = $('#' + imgID);
                     var $li = $('#' + id);
@@ -193,62 +268,10 @@
                     $('#' + btnID).click(doRemoveClick);
                     $('#' + btnIDmain).click(doSetMain);
 
-                    var fd = new FormData();
-                    fd.append(options.csrfParam, options.csrfValue);
-                    fd.append(options.fieldName, file);
-                    var addFields = options.addFields || {};
-                    appendData(fd, addFields);
-                    $.when(
-                            $.ajax({
-                                type: 'POST',
-                                data: fd,
-                                url: options.url,
-                                contentType: false,
-                                processData: false,
-                                dataType: 'json',
-                                xhr: function ()
-                                {
-                                    var xhr = $.ajaxSettings.xhr();
-                                    if (xhr.upload)
-                                        xhr.upload.addEventListener('progress', function (progress)
-                                        {
-                                            if (progress.lengthComputable)
-                                            {
-                                                var percentComplete = progress.loaded / progress.total * 100;
-                                                $progress.css({width: percentComplete + '%'});
-                                            }
-                                        }, false);
-
-                                    xhr.upload.addEventListener('load', function (end)
-                                    {
-                                        $progress.css({width: '100%'}).fadeOut(1000);
-                                    });
-                                    return xhr;
-                                }
-                            })
-
-                        ).done(function (json)
-                        {
-                            if (json.hasError)
-                            {
-                                $li.html(json.error).css({color: 'white', background: 'red'}).delay(3000).fadeOut(500, function()
-                                {
-                                    $li.remove();
-                                });
-                                return;
-                            }
-                            var url = json.data.Images[options.jsonField];
-                            $img.attr('src', url);
-
-                            $li.attr('data-imageid', json.data[options.imageIDField]);
-                            if ($.isFunction(options.success)) options.success(json);
-
-                            $list.unbind('sortupdate', doSort);
-                            $list.sortable('destroy');
-                            $list.sortable({handle: '.handle'}).bind('sortupdate', doSort);
-
-                        }).fail(onError);
+                    queue(uploadFile(file, $progress, $li, $img));
                 });
+
+
             });
         });
     };
