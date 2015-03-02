@@ -226,10 +226,6 @@
                         li.attr('data-imageid', json.data[options.imageIDField]);
                         if ($.isFunction(options.success)) options.success(json);
 
-                        //$list.unbind('sortupdate', doSort);
-                        //$list.sortable('destroy');
-                        //$list.sortable({handle: '.handle'}).bind('sortupdate', doSort);
-
                     }).fail(onError);
             };
 
@@ -271,7 +267,12 @@
                     queue(uploadFile(file, $progress, $li, $img));
                 });
 
-
+                queue(function()
+                {
+                    $list.unbind('sortupdate', doSort);
+                    $list.sortable('destroy');
+                    $list.sortable({handle: '.handle'}).bind('sortupdate', doSort);
+                });
             });
         });
     };
@@ -298,7 +299,7 @@
         afterSort: null,
         error: null,
         addFields: [],
-        addButtons: [],
+        addButtons: []
     };
 
 }(jQuery));
