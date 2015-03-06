@@ -71,7 +71,9 @@
 
         public static function RenderImageBox($data)
         {
-            $pathP = $data['data']['Images']['preview'];
+            $key = $data['ImgSize'];
+            if(isset($data['data']['Images'][$key])) $pathP = $data['data']['Images'][$key];
+            else $pathP = $data['data']['Images']['preview'];
             $pathO = $data['data']['Images']['o'];
 
             $html = <<<DIV
