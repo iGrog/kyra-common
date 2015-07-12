@@ -16,7 +16,12 @@
             foreach($json['data'] as $part)
             {
                 $render = 'Render'.$part['type'];
-                $html .= self::$render($part['data']);
+                $ret = self::$render($part['data']);
+                if($part['type'] != 'columns')
+                {
+                    $ret = '<div class="columns-12">'.$ret.'</div>';
+                }
+                $html .= $ret;
             }
             return $html;
         }
@@ -105,7 +110,7 @@ DIV;
 
         public static function RenderImage($data)
         {
-            $path = $data['data']['Images']['preview'];
+            $path = $data['data']['Images']['o'];
             $dataAttribs[] = 'data-iid="'.$data['data']['IID'].'"';
             foreach($data['data']['Images'] as $key=>$imgInfo)
             {

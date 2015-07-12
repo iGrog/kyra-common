@@ -46,6 +46,15 @@
                 return false;
             });
 
+            var doEditInfo = function()
+            {
+                var $itm = $(this);
+                var $cli = $itm.closest('li');
+                var iid = $cli.attr('data-imageid');
+                if($.isFunction(options.editInfo))
+                    options.editInfo(iid)
+            };
+
             var doSetMain = function()
             {
                 if (!confirm(options.setMainMessage)) return false;
@@ -123,8 +132,15 @@
                     $sLi.append('<button class="delete">x</button>');
                 if($sLi.find('button.main').length == 0)
                     $sLi.append('<button class="main">*</button>');
+
+                if(options.editInfo != null)
+                {
+                    if ($sLi.find('button.info').length == 0)
+                        $sLi.append('<button class="info">?</button>');
+                }
             });
 
+            $list.find('button.info').click(doEditInfo);
             $list.find('button.delete').click(doRemoveClick);
             $list.find('button.main').click(doSetMain);
 
@@ -299,7 +315,8 @@
         afterSort: null,
         error: null,
         addFields: [],
-        addButtons: []
+        addButtons: [],
+        editInfo : null
     };
 
 }(jQuery));

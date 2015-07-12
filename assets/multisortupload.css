@@ -45,6 +45,16 @@
     z-index: 10;
 }
 
+.msupload  li button.info {
+    position: absolute;
+    background-color: blue;
+    color: white;
+    width: 20px;
+    top: 0;
+    right: 50px;
+    z-index: 10;
+}
+
 
 .msupload li .handle {
     width: 250px;

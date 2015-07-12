@@ -21,6 +21,7 @@
         public $afterSuccess = null;
         public $addParams = [];
         public $addButtons = [];
+        public $editInfo = null;
 
         public function init()
         {
@@ -64,7 +65,8 @@ SUCCESS;
                                     $success
                                     csrfParam : '$csrfToken',
                                     csrfValue: '$csrfValue',
-                                    addFields: $addParams
+                                    addFields: $addParams,
+                                    editInfo : {$this->editInfo}
                                     });
 JS;
 

@@ -1,5 +1,5 @@
 <div class="header-image-widget">
-    <img src="<?=$this->context->image; ?>" id="<?=$this->context->imageID; ?>" style="max-height: 150px; min-height: 150px; "/>
+    <img src="<?=$this->context->image; ?>" id="<?=$this->context->imageID; ?>" style="max-height: 150px; min-height: 150px; background-color: #ddd "/>
     <input type="hidden" name="<?=$fName; ?>" id="<?=$fID; ?>" value="<?=$fValue; ?>" />
 
 </div>
